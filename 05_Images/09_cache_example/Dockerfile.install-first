@@ -1,0 +1,14 @@
+FROM ubuntu:24.04
+
+# Step 1: Install jq first (stable, rarely changes)
+# Docker caches this layer as long as the RUN instruction text is unchanged.
+# It does NOT check upstream package versions — a new jq release will NOT
+# bust the cache automatically.
+RUN apt update && apt install -y jq && rm -rf /var/lib/apt/lists/*
+
+# Step 2: Copy the script last (changes frequently)
+# Only this layer is invalidated when process.sh is edited
+COPY process.sh /process.sh
+RUN chmod +x /process.sh
+
+ENTRYPOINT ["/process.sh"]

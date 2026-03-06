@@ -1,0 +1,48 @@
+---
+# Example compose file for running a granfana container
+# Starts a grafana container an corresponding postgres instance
+
+services:
+  grafana:
+    image: grafana/grafana:12.0.0
+    restart: unless-stopped
+    depends_on:
+      - grafana-db
+    volumes:
+      - grafana-data:/var/lib/grafana
+    ports:
+      - 127.0.0.1:8070:3000
+    networks:
+      - grafana-nw
+    environment:
+      GF_SERVER_DOMAIN: localhost
+      GF_SERVER_ROOT_URL: http://localhost
+      GF_DATABASE_TYPE: postgres
+      GF_DATABASE_HOST: grafana-db:5432
+      GF_DATABASE_USER: grafana
+      GF_DATABASE_PASSWORD: CHANGE-ME
+      GF_DATABASE_SSL_MODE: disable
+
+  grafana-db:
+    image: postgres:15.4
+    restart: unless-stopped
+    volumes:
+      - grafana-db-data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: grafana
+      POSTGRES_USER: grafana
+      POSTGRES_PASSWORD: CHANGE-ME
+    networks:
+      - grafana-nw
+    healthcheck:
+      test: pg_isready -U grafana -d grafana
+      interval: 10s
+      timeout: 3s
+      start_period: 60s
+
+volumes:
+  grafana-data:
+  grafana-db-data:
+
+networks:
+  grafana-nw:
